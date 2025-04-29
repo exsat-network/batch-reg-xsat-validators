@@ -13,7 +13,7 @@
     "@wharfkit/antelope": "^1.0.13",
     "@wharfkit/session": "^1.4.0",
     "@wharfkit/wallet-plugin-privatekey": "^1.1.0",
-    "axios": "^1.7.9",
+    "axios": "^ 1.8.2",
     "bn.js": "^5.2.1",
     "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
