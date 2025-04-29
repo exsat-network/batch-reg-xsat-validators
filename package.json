@@ -1,0 +1,39 @@
+{
+  "name": "exsat-transfer",
+  "version": "1.0.0",
+  "scripts": {
+    "cracc": "ts-node src/createAccount.ts",
+    "docker": "ts-node src/dockerCompose.ts",
+    "build": "tsc",
+    "lint": "eslint 'src/**/*.ts'"
+  },
+  "dependencies": {
+    "@wharfkit/antelope": "^1.0.13",
+    "@wharfkit/session": "^1.4.0",
+    "@wharfkit/wallet-plugin-privatekey": "^1.1.0",
+    "axios": "^1.7.9",
+    "bn.js": "^5.2.1",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.4.5",
+    "hdkey": "^2.1.0",
+    "node-cron": "^3.0.3",
+    "web3": "^4.14.0",
+    "wif": "^4.0.0",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.3.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "nodemon": "^2.0.15",
+    "prettier": "^3.3.3",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.5.4"
+  }
+}

@@ -1,0 +1,5 @@
+.env
+dist
+keystore_files
+node_modules
+account.txt
