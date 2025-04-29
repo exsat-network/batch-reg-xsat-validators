@@ -8,6 +8,8 @@
     "lint": "eslint 'src/**/*.ts'"
   },
   "dependencies": {
+    "@scure/bip39": "^1.6.0",
+    "@types/web3": "^1.2.2",
     "@wharfkit/antelope": "^1.0.13",
     "@wharfkit/session": "^1.4.0",
     "@wharfkit/wallet-plugin-privatekey": "^1.1.0",
@@ -16,15 +18,16 @@
     "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
     "hdkey": "^2.1.0",
+    "node": "^22.15.0",
     "node-cron": "^3.0.3",
-    "web3": "^4.14.0",
+    "web3": "^4.16.0",
     "wif": "^4.0.0",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
-    "@types/node": "^22.3.0",
+    "@types/node": "^22.15.3",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.42.0",

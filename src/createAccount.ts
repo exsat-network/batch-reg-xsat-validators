@@ -1,6 +1,6 @@
 import { generateKeystore, getUserAccount, generateExsatAccounts } from './account';
 import { utils, Web3 } from 'web3';
-import { EVM_RPC_URL, PRIVATE_KEY, EXSAT_RPC_URLS, XSAT_STAKE_HELPER_CONTRACT } from './constant';
+import { EVM_RPC_URL, PRIVATE_KEY, EXSAT_RPC_URLS, XSAT_STAKE_HELPER_CONTRACT, EVM_CHAIN_ID } from './constant';
 import { stakeHelperAbi } from './abi/StakeHelper';
 import { erc20Abi } from './abi/erc20'; 
 import {convertAddress} from './utils';
