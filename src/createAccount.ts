@@ -1,6 +1,13 @@
 import { generateKeystore, getUserAccount, generateExsatAccounts } from './account';
 import { utils, Web3 } from 'web3';
-import { EVM_RPC_URL, PRIVATE_KEY, EXSAT_RPC_URLS, XSAT_STAKE_HELPER_CONTRACT, EVM_CHAIN_ID } from './constant';
+import {
+  EVM_RPC_URL,
+  PRIVATE_KEY,
+  EXSAT_RPC_URLS,
+  XSAT_STAKE_HELPER_CONTRACT,
+  EVM_CHAIN_ID,
+  STAKER_REWARD_ADDRESS,
+} from './constant';
 import { stakeHelperAbi } from './abi/StakeHelper';
 import { erc20Abi } from './abi/erc20'; 
 import {convertAddress} from './utils';
@@ -50,13 +57,13 @@ const total = Number(process.env.TOTAL) || 1;
             // Register validator
             const exsatApi = new ExsatApi({ accountName: newacc, privateKey: privateKey.toString() }, EXSAT_RPC_URLS);
             await exsatApi.initialize();
-            const regres = await exsatApi.regxSatValidator(newacc, signer.address);
+            const regres = await exsatApi.regxSatValidator(newacc, STAKER_REWARD_ADDRESS || signer.address);
             console.log(regres.transaction_id);
             // Recharge resources for validator
-            const recharge = await rechargeGas(newacc);
-            console.log(recharge.transactionHash);
+            // const recharge = await rechargeGas(newacc);
+            // console.log(recharge.transactionHash);
             // EVM approve and stake operations
-            await xsatStake(newacc, '2100000000000000000000');
+            // await xsatStake(newacc, '2100000000000000000000');
           }
           fs.writeFileSync(`./account.txt`, `${newacc}\n`, { flag: 'a' });
         } catch (e: any) {
@@ -75,7 +82,7 @@ async function evmSignup(accountName,publicKey) {
       data: web3.utils.utf8ToHex(`${accountName}-${publicKey}`),
       chainId: Number(EVM_CHAIN_ID),
       gas: 200000,
-      gasPrice: await web3.eth.getGasPrice(), // 获取当前 gas 价格
+      gasPrice: await web3.eth.getGasPrice(), 
     };
     console.log(`${accountName}-${publicKey}`);
     console.log(txData);
@@ -99,7 +106,7 @@ async function rechargeGas(account) {
       data: web3.utils.utf8ToHex(account),
       chainId: Number(EVM_CHAIN_ID),
       gas: 200000,
-      gasPrice: await web3.eth.getGasPrice(), // 获取当前 gas 价格
+      gasPrice: await web3.eth.getGasPrice(), 
     };
     const signedTx = await web3.eth.accounts.signTransaction(txData, PRIVATE_KEY);
     return await web3.eth.sendSignedTransaction(signedTx.rawTransaction);

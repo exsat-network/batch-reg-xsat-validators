@@ -2,7 +2,15 @@
 
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { BTC_RPC_URL, BTC_RPC_USERNAME, BTC_RPC_PASSWORD,  EXSAT_RPC_URLS ,NETWORK } from './constant';
+import {
+  BTC_RPC_URL,
+  BTC_RPC_USERNAME,
+  BTC_RPC_PASSWORD,
+  EXSAT_RPC_URLS,
+  NETWORK,
+  KEYSTORE_PASSWORD,
+  KEYSTORE_PATH,
+} from './constant';
 
 async function organizeKeystoreFiles(folderPath: string): Promise<void> {
   // Read all files in the directory
@@ -46,7 +54,7 @@ BTC_RPC_PASSWORD=${BTC_RPC_PASSWORD}
 PROMETHEUS=false
 PROMETHEUS_ADDRESS=0.0.0.0:9900
 VALIDATOR_KEYSTORE_FILE=/app/.exsat/${validator}.sat_keystore.json
-VALIDATOR_KEYSTORE_PASSWORD=123456
+VALIDATOR_KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD}
 `.trim() + '\n';
 
     await fs.writeFile(path.join(validatorDir, '.env'), envContent, 'utf8');
@@ -62,10 +70,10 @@ services:
   for (const validator of validatorNames) {
     composeContent += `
   ${validator}:
-    image: exsatnetwork/validator:latest
+    image: exsatnetwork/exsat-client:latest
     volumes:
-      - $HOME/.exsat/${validator}/.env:/app/.env
-      - $HOME/.exsat/${validator}/:/root/.exsat
+      - ${KEYSTORE_PASSWORD}/${validator}/.env:/app/.env
+      - ${KEYSTORE_PASSWORD}/${validator}/:/root/.exsat
     command: --run
     container_name: ${validator}
     logging:

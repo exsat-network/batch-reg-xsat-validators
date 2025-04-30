@@ -4,12 +4,13 @@ config();
 
 export const NETWORK = process.env.NETWORK || 'mainnet';
 export const KEYSTORE_PATH = process.env.KEYSTORE_PATH || './keystore_files';
-export const PASSWORD = process.env.PASSWORD || '123456';
+export const KEYSTORE_PASSWORD = process.env.KEYSTORE_PASSWORD || '123456';
 export const EXSAT_RPC_URLS = JSON.parse(process.env.EXSAT_RPC_URLS) || [];
 export const EVM_RPC_URL = process.env.EVM_RPC_URL || '';
 export const EVM_CHAIN_ID = process.env.EVM_CHAIN_ID || 1;
 
 export const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
+export const STAKER_REWARD_ADDRESS = process.env.STAKER_REWARD_ADDRESS || '';
 
 export const ACCOUNT_PREFIX = process.env.ACCOUNT_PREFIX || 'valid';
 export const ACCOUNT_SUFFIX = process.env.ACCOUNT_SUFFIX || '.sat';

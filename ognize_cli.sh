@@ -13,7 +13,7 @@ BTC_RPC_PASSWORD=${BTC_RPC_PASSWORD:-}
 
 
 # Default directory is $HOME/.exsat
-BASE_DIR="${1:-$HOME/xsat-validators}"
+BASE_DIR="${1:-$KEYSTORE_PATH}"
 
 # Check if directory exists
 if [ ! -d "$BASE_DIR" ]; then
@@ -59,8 +59,8 @@ BTC_RPC_USERNAME=$BTC_RPC_USERNAME
 BTC_RPC_PASSWORD=$BTC_RPC_PASSWORD
 PROMETHEUS=false
 PROMETHEUS_ADDRESS=0.0.0.0:9900
-XSAT_VALIDATOR_KEYSTORE_FILE=/app/.exsat/${validator}_keystore.json
-XSAT_VALIDATOR_KEYSTORE_PASSWORD=123456
+VALIDATOR_KEYSTORE_FILE=/app/.exsat/${validator}_keystore.json
+VALIDATOR_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD
 EOF
   echo "Created .env file at $target_dir"
 done
@@ -81,10 +81,10 @@ for validator in "${validators[@]}"; do
     image: exsatnetwork/exsat-client:latest
     container_name: ${validator}
     environment:
-      - CLIENT_TYPE=xsat-validator
+      - CLIENT_TYPE=validator
     volumes:
-      - \$HOME/xsat-validators/${validator}/.env:/app/.exsat/.env
-      - \$HOME/xsat-validators/${validator}/${validator}_keystore.json:/app/.exsat/${validator}_keystore.json
+      - ${KEYSTORE_PATH}/${validator}/.env:/app/.exsat/.env
+      - ${KEYSTORE_PATH}/${validator}/${validator}_keystore.json:/app/.exsat/${validator}_keystore.json
     command: ""
     logging:
       driver: "json-file"
