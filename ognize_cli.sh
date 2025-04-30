@@ -1,9 +1,20 @@
 #!/bin/bash
 set -e
 
+# Default directory is $HOME/.exsat
+BASE_DIR="${1:-$KEYSTORE_PATH}"
+
 if [ -f "$BASE_DIR/.env" ]; then
   source "$BASE_DIR/.env"
 fi
+
+# Check if directory exists
+if [ ! -d "$BASE_DIR" ]; then
+  echo "Directory $BASE_DIR does not exist"
+  exit 1
+fi
+
+
 # Set default values if not defined in .env
 NETWORK=${NETWORK:-testnet}
 EXSAT_RPC_URLS=${EXSAT_RPC_URLS:-'["https://chain-tst3.exactsat.io"]'}
@@ -11,15 +22,6 @@ BTC_RPC_URL=${BTC_RPC_URL:-https://testnet3b.exsat.network}
 BTC_RPC_USERNAME=${BTC_RPC_USERNAME:-}
 BTC_RPC_PASSWORD=${BTC_RPC_PASSWORD:-}
 
-
-# Default directory is $HOME/.exsat
-BASE_DIR="${1:-$KEYSTORE_PATH}"
-
-# Check if directory exists
-if [ ! -d "$BASE_DIR" ]; then
-  echo "Directory $BASE_DIR does not exist"
-  exit 1
-fi
 
 # Array to record all validator names
 declare -a validators=()
