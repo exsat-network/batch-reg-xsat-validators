@@ -7,7 +7,7 @@ import WIF from 'wif';
 import { bytesToHex } from 'web3-utils';
 import { createKeystore } from './keystore';
 import axios from 'axios';
-import { EXSAT_RPC_URLS, KEYSTORE_PATH, PASSWORD, VALID_CHARS, ACCOUNT_PREFIX, ACCOUNT_SUFFIX, TOTAL } from './constant';
+import { EXSAT_RPC_URLS, KEYSTORE_PATH, KEYSTORE_PASSWORD, VALID_CHARS, ACCOUNT_PREFIX, ACCOUNT_SUFFIX, TOTAL } from './constant';
 
 export async function getUserAccount(accountName) {
   accountName = accountName.endsWith('.sat') ? accountName : `${accountName}.sat`;
@@ -35,7 +35,7 @@ async function saveKeystore(privateKey, username, role) {
   // Continue with the rest of the keystore saving logic
   const keystore = await createKeystore(
     `${bytesToHex(WIF.decode(privateKey.toWif(), 128).privateKey)}`,
-    PASSWORD,
+    KEYSTORE_PASSWORD,
     username,
     role
   );

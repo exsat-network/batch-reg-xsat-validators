@@ -72,8 +72,8 @@ services:
   ${validator}:
     image: exsatnetwork/exsat-client:latest
     volumes:
-      - ${KEYSTORE_PASSWORD}/${validator}/.env:/app/.env
-      - ${KEYSTORE_PASSWORD}/${validator}/:/root/.exsat
+      - ${KEYSTORE_PATH}/${validator}/.env:/app/.env
+      - ${KEYSTORE_PATH}/${validator}/:/root/.exsat
     command: --run
     container_name: ${validator}
     logging:
