@@ -1,12 +1,14 @@
 #!/bin/bash
 set -e
 
-# Default directory is $HOME/.exsat
-BASE_DIR="${1:-$KEYSTORE_PATH}"
+
 
 if [ -f "$BASE_DIR/.env" ]; then
   source "$BASE_DIR/.env"
 fi
+
+# Default directory is $HOME/.exsat
+BASE_DIR="${1:-$KEYSTORE_PATH}"
 
 # Check if directory exists
 if [ ! -d "$BASE_DIR" ]; then
