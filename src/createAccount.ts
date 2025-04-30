@@ -15,7 +15,7 @@ import ExsatApi from './exsat-api';
 import * as fs from 'node:fs';
 
 
-const mainnet = {
+const tokens = {
   tokenList: {
     XSAT: {
       symbol: 'XSAT',
@@ -120,12 +120,12 @@ async function rechargeGas(account) {
 
 async function xsatStake(account, amount) {
   account = account.endsWith('.sat') ? account : `${account}.sat`;
-  const tokenContract = new web3.eth.Contract(erc20Abi, mainnet.tokenList.XSAT.address);
-  const allowance = await tokenContract.methods.allowance(signer.address, mainnet.tokenList.XSAT.stake_address).call();
+  const tokenContract = new web3.eth.Contract(erc20Abi, tokens.tokenList.XSAT.address);
+  const allowance = await tokenContract.methods.allowance(signer.address, tokens.tokenList.XSAT.stake_address).call();
   // @ts-ignore
   if (BigInt(allowance) < BigInt(amount)) {
     // @ts-ignore
-    const receipt = await approve(mainnet.tokenList.XSAT.stake_address, amount);
+    const receipt = await approve(tokens.tokenList.XSAT.stake_address, amount);
     console.log('Approval successful:', receipt);
   }
   const receipt = await xsatDeposit(account, amount);
@@ -135,12 +135,12 @@ async function xsatStake(account, amount) {
 
 async function approve(spenderAddress, amount) {
   try {
-    const tokenContract = new web3.eth.Contract(erc20Abi, mainnet.tokenList.XSAT.address);
+    const tokenContract = new web3.eth.Contract(erc20Abi, tokens.tokenList.XSAT.address);
     const data = tokenContract.methods.approve(spenderAddress, amount).encodeABI();
 
     const txData = {
       from: signer.address,
-      to: mainnet.tokenList.XSAT.address,
+      to: tokens.tokenList.XSAT.address,
       data,
       gas: 200000, // Set gas
       gasPrice: await web3.eth.getGasPrice(), // Get current gas price
@@ -162,11 +162,11 @@ async function approve(spenderAddress, amount) {
 
 async function xsatDeposit(targetAddress, depositAmount) {
   try {
-    const stakeHelperContract = new web3.eth.Contract(stakeHelperAbi, mainnet.tokenList.XSAT.stake_address);
+    const stakeHelperContract = new web3.eth.Contract(stakeHelperAbi, tokens.tokenList.XSAT.stake_address);
     const data = stakeHelperContract.methods.deposit(convertAddress(targetAddress), depositAmount).encodeABI();
     const txData = {
       from: signer.address,
-      to: mainnet.tokenList.XSAT.stake_address,
+      to: tokens.tokenList.XSAT.stake_address,
       data,
       gas: 200000, // Set gas
       gasPrice: await web3.eth.getGasPrice(), // Get current gas price
