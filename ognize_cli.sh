@@ -82,8 +82,7 @@ for validator in "${validators[@]}"; do
     environment:
       - CLIENT_TYPE=validator
     volumes:
-      - ${KEYSTORE_PATH}/${validator}/.env:/app/.exsat/.env
-      - ${KEYSTORE_PATH}/${validator}/${validator}_keystore.json:/app/.exsat/${validator}_keystore.json
+      - ${KEYSTORE_PATH}/${validator}:/app/.exsat
     command: ""
     logging:
       driver: "json-file"
