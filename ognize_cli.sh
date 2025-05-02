@@ -82,7 +82,7 @@ for validator in "${validators[@]}"; do
     environment:
       - CLIENT_TYPE=validator
     volumes:
-      - ${BASE_DIR}/${validator}:/app/.exsat
+      - ./${validator}:/app/.exsat
     command: ""
     logging:
       driver: "json-file"
