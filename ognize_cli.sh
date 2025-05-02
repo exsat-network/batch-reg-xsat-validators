@@ -23,14 +23,14 @@ KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD:-123456}
 # Array to record all validator names
 declare -a validators=()
 
-# Iterate through files matching *.sat_keystore.json format
-for file in "$BASE_DIR"/*.sat_keystore.json; do
+# Iterate through files matching *_keystore.json format
+for file in "$BASE_DIR"/*_keystore.json; do
   # Skip if no files match
   [ -e "$file" ] || continue
 
-  # Extract validator name, assuming filename format is [validator].sat_keystore.json
+  # Extract validator name, assuming filename format is [validator]_keystore.json
   filename=$(basename "$file")
-  validator="${filename%%.sat_keystore.json}"
+  validator="${filename%%_keystore.json}"
   validators+=("$validator")
 
   # 1. Create folder named after validator (if it doesn't exist)
