@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "scripts": {
     "cracc": "ts-node src/createAccount.ts",
-    "docker": "ts-node src/dockerCompose.ts",
     "build": "tsc",
     "lint": "eslint 'src/**/*.ts'"
   },
