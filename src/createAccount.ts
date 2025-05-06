@@ -78,22 +78,17 @@ async function main() {
       } else if (!validators) {
         console.log('restart register validator');
         const keystore = getKeystore(newacc);
-        console.log(keystore);
         const privateKey = await decryptKeystore(keystore, process.env.KEYSTORE_PASSWORD);
-        console.log(privateKey);
 
         const exsatApi = new ExsatApi({ accountName: newacc, privateKey: privateKey.toString() }, EXSAT_RPC_URLS);
         await exsatApi.initialize();
         const regres = await exsatApi.regxSatValidator(newacc, STAKER_REWARD_ADDRESS || signer.address);
         console.log(regres.transaction_id);
       }
-
     } catch (e: any) {
-      console.log(e);
       console.log(e.message, e.stack);
       process.exit(1);
     }
-
   }
 }
 
