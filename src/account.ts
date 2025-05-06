@@ -7,7 +7,16 @@ import WIF from 'wif';
 import { bytesToHex } from 'web3-utils';
 import { createKeystore } from './keystore';
 import axios from 'axios';
-import { EXSAT_RPC_URLS, KEYSTORE_PATH, KEYSTORE_PASSWORD, VALID_CHARS, ACCOUNT_PREFIX, ACCOUNT_SUFFIX, TOTAL } from './constant';
+import {
+  EXSAT_RPC_URLS,
+  KEYSTORE_PATH,
+  KEYSTORE_PASSWORD,
+  VALID_CHARS,
+  ACCOUNT_PREFIX,
+  ACCOUNT_SUFFIX,
+  TOTAL,
+} from './constant';
+
 
 export async function getUserAccount(accountName) {
   accountName = accountName.endsWith('.sat') ? accountName : `${accountName}.sat`;
@@ -19,7 +28,7 @@ export async function getUserAccount(accountName) {
       }),
       {
         headers: { 'Content-Type': 'application/json' },
-      }
+      },
     );
     const owner = response.data.permissions.find((p) => p.perm_name === 'owner');
     return { account: response.data.account_name, pubkey: owner.required_auth.keys[0].key };
@@ -31,13 +40,38 @@ export async function getUserAccount(accountName) {
   }
 }
 
+export async function getIsRegisterValidator(accountName: string) {
+  try {
+    const response = await axios.post(
+      `${EXSAT_RPC_URLS[0]}/v1/chain/get_table_rows`,
+      JSON.stringify({
+        code: 'endrmng.xsat',
+        json: true,
+        limit: '100',
+        lower_bound: accountName,
+        reverse: false,
+        scope: 'endrmng.xsat',
+        show_payer: true,
+        table: 'validators',
+        upper_bound: accountName,
+      }),
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+    return response.data && response.data.rows && response.data.rows.length > 0;
+  } catch (error: any) {
+    throw error;
+  }
+}
+
 async function saveKeystore(privateKey, username, role) {
   // Continue with the rest of the keystore saving logic
   const keystore = await createKeystore(
     `${bytesToHex(WIF.decode(privateKey.toWif(), 128).privateKey)}`,
     KEYSTORE_PASSWORD,
     username,
-    role
+    role,
   );
 
   const keystoreFilePath = `${KEYSTORE_PATH}/${username}_keystore.json`;
@@ -52,7 +86,7 @@ export async function generateKeystore(username, role) {
 
   const seed = mnemonicToSeedSync(mnemonic);
   const master = HDKey.fromMasterSeed(Buffer.from(seed));
-  const node = master.derive("m/44'/194'/0'/0/0");
+  const node = master.derive('m/44\'/194\'/0\'/0/0');
 
   const privateKey = PrivateKey.from(WIF.encode(128, node.privateKey!, false).toString());
   const publicKey = privateKey.toPublic().toString();
@@ -95,3 +129,5 @@ export function generateExsatAccounts(): string[] {
 
   return accounts;
 }
+
+

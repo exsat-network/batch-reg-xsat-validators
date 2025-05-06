@@ -1,5 +1,10 @@
-import { generateKeystore, getUserAccount, generateExsatAccounts } from './account';
-import { utils, Web3 } from 'web3';
+import {
+  generateKeystore,
+  getUserAccount,
+  generateExsatAccounts,
+  getIsRegisterValidator,
+} from './account';
+import { Web3 } from 'web3';
 import {
   EVM_RPC_URL,
   PRIVATE_KEY,
@@ -9,10 +14,11 @@ import {
   STAKER_REWARD_ADDRESS,
 } from './constant';
 import { stakeHelperAbi } from './abi/StakeHelper';
-import { erc20Abi } from './abi/erc20'; 
-import {convertAddress} from './utils';
+import { erc20Abi } from './abi/erc20';
+import { convertAddress } from './utils';
 import ExsatApi from './exsat-api';
 import * as fs from 'node:fs';
+import { decryptKeystore, getKeystore } from './keystore';
 
 
 const tokens = {
@@ -39,41 +45,59 @@ const tokens = {
 // };
 const web3 = new Web3(EVM_RPC_URL);
 const signer = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
+
 async function main() {
-const total = Number(process.env.TOTAL) || 1;
+  const total = Number(process.env.TOTAL) || 1;
 
   const accounts = generateExsatAccounts();
- 
-    // Generate the first 'limit' strings of current length m
-    for (let newacc of accounts) {
-      console.log(newacc);
+  // Generate the first 'limit' strings of current length m
+  for (const newacc of accounts) {
+    console.log(newacc);
+
+    const validators = await getIsRegisterValidator(newacc);
+    try {
 
       if (!(await getUserAccount(newacc))) {
-        try {
-          const { privateKey, publicKey } = await generateKeystore(newacc, 'xsat_validator');
-          // Register EOS account
-          const result = await evmSignup(newacc, publicKey);
-          if (result) {
-            // Register validator
-            const exsatApi = new ExsatApi({ accountName: newacc, privateKey: privateKey.toString() }, EXSAT_RPC_URLS);
-            await exsatApi.initialize();
-            const regres = await exsatApi.regxSatValidator(newacc, STAKER_REWARD_ADDRESS || signer.address);
-            console.log(regres.transaction_id);
-            // Recharge resources for validator
-            // const recharge = await rechargeGas(newacc);
-            // console.log(recharge.transactionHash);
-            // EVM approve and stake operations
-            // await xsatStake(newacc, '2100000000000000000000');
-          }
-          fs.writeFileSync(`./account.txt`, `${newacc}\n`, { flag: 'a' });
-        } catch (e: any) {
-          console.log(e.message, e.stack);
-          process.exit(1);
+        const { privateKey, publicKey } = await generateKeystore(newacc, 'xsat_validator');
+
+        // Register EOS account
+        const result = await evmSignup(newacc, publicKey);
+        if (result) {
+          const exsatApi = new ExsatApi({ accountName: newacc, privateKey: privateKey.toString() }, EXSAT_RPC_URLS);
+          await exsatApi.initialize();
+          // Register validator
+          const regres = await exsatApi.regxSatValidator(newacc, STAKER_REWARD_ADDRESS || signer.address);
+          console.log(regres.transaction_id);
+          // Recharge resources for validator
+          // const recharge = await rechargeGas(newacc);
+          // console.log(recharge.transactionHash);
+          // EVM approve and stake operations
+          // await xsatStake(newacc, '2100000000000000000000');
         }
+        fs.writeFileSync(`./account.txt`, `${newacc}\n`, { flag: 'a' });
+      } else if (!validators) {
+        console.log('restart register validator');
+        const keystore = getKeystore(newacc);
+        console.log(keystore);
+        const privateKey = await decryptKeystore(keystore, process.env.KEYSTORE_PASSWORD);
+        console.log(privateKey);
+
+        const exsatApi = new ExsatApi({ accountName: newacc, privateKey: privateKey.toString() }, EXSAT_RPC_URLS);
+        await exsatApi.initialize();
+        const regres = await exsatApi.regxSatValidator(newacc, STAKER_REWARD_ADDRESS || signer.address);
+        console.log(regres.transaction_id);
       }
+
+    } catch (e: any) {
+      console.log(e);
+      console.log(e.message, e.stack);
+      process.exit(1);
     }
+
+  }
 }
-async function evmSignup(accountName,publicKey) {
+
+async function evmSignup(accountName, publicKey) {
   try {
     const txData = {
       from: signer.address,
@@ -82,17 +106,17 @@ async function evmSignup(accountName,publicKey) {
       data: web3.utils.utf8ToHex(`${accountName}-${publicKey}`),
       chainId: Number(EVM_CHAIN_ID),
       gas: 200000,
-      gasPrice: await web3.eth.getGasPrice(), 
+      gasPrice: await web3.eth.getGasPrice(),
     };
     console.log(`${accountName}-${publicKey}`);
     console.log(txData);
     const signedTx = await web3.eth.accounts.signTransaction(txData, PRIVATE_KEY);
     return await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
   } catch (error) {
-    console.error(accountName + " registration error: "+ error);
-     process.exit(1);
+    console.error(accountName + ' registration error: ' + error);
+    process.exit(1);
   }
-  
+
 }
 
 
@@ -106,15 +130,15 @@ async function rechargeGas(account) {
       data: web3.utils.utf8ToHex(account),
       chainId: Number(EVM_CHAIN_ID),
       gas: 200000,
-      gasPrice: await web3.eth.getGasPrice(), 
+      gasPrice: await web3.eth.getGasPrice(),
     };
     const signedTx = await web3.eth.accounts.signTransaction(txData, PRIVATE_KEY);
     return await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
   } catch (error) {
     console.error(account + ' recharge error: ' + error);
-     process.exit(1);
+    process.exit(1);
   }
-  
+
 }
 
 
@@ -155,9 +179,9 @@ async function approve(spenderAddress, amount) {
     // console.log('Transaction hash:', receipt.transactionHash);
   } catch (error) {
     console.error('Approve error: ' + error);
-     process.exit(1);
+    process.exit(1);
   }
-  
+
 }
 
 async function xsatDeposit(targetAddress, depositAmount) {
@@ -180,8 +204,8 @@ async function xsatDeposit(targetAddress, depositAmount) {
     return receipt.transactionHash;
     // console.log('Transaction hash:', receipt.transactionHash);
   } catch (error) {
-     console.error('XSAT staking error: ' + error);
-      process.exit(1);
+    console.error('XSAT staking error: ' + error);
+    process.exit(1);
   }
 
 }
