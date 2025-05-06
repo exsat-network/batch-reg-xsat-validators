@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-
 # Default directory is $HOME/.exsat
 BASE_DIR="${1:-./keystores}"
 
@@ -10,7 +9,6 @@ if [ ! -d "$BASE_DIR" ]; then
   echo "Directory $BASE_DIR does not exist"
   exit 1
 fi
-
 
 # Set default values if not defined in .env
 NETWORK=${NETWORK:-mainnet}
@@ -23,31 +21,24 @@ KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD:-123456}
 # Array to record all validator names
 declare -a validators=()
 
-# Iterate through files matching *_keystore.json format
-for file in "$BASE_DIR"/*_keystore.json; do
-  # Skip if no files match
-  [ -e "$file" ] || continue
+# Function to process a keystore file (FORCE OVERWRITE MODE)
+process_keystore() {
+  local file="$1"
+  local validator="$2"
 
-  # Extract validator name, assuming filename format is [validator]_keystore.json
-  filename=$(basename "$file")
-  validator="${filename%%_keystore.json}"
-  validators+=("$validator")
-
-  # 1. Create folder named after validator (if it doesn't exist)
+  # 1. Create folder named after validator (FORCE)
   target_dir="$BASE_DIR/$validator"
-  if [ ! -d "$target_dir" ]; then
-    mkdir "$target_dir"
-    echo "Created directory: $target_dir"
+  mkdir -p "$target_dir"  # -p ensures it won't fail if dir exists
+  echo "Ensured directory: $target_dir"
+
+  # 2. Move file to corresponding folder and rename to [validator]_keystore.json (FORCE)
+  target_file="$target_dir/${validator}_keystore.json"
+  if [ "$file" != "$target_file" ]; then
+    mv -f "$file" "$target_file"  # -f forces overwrite
+    echo "Moved/overwrote file $file to $target_file"
   fi
 
-  # 2. Move file to corresponding folder and rename to [validator]_keystore.json
-  mv "$file" "$target_dir/${validator}_keystore.json"
-  echo "Moved file $filename to $target_dir/${validator}_keystore.json"
-
-  # 3. Create .env file in the folder with the following content:
-  # Note: Removed extra lines, keeping only the configuration, and changed keystore file path to /app/.exsat/${validator}_keystore.json
-  # Read from existing .env file if it exists, otherwise use defaults
-
+  # 3. Create .env file in the folder (FORCE OVERWRITE)
   env_file="$target_dir/.env"
   cat > "$env_file" <<EOF
 # Write the values to the new .env file
@@ -61,10 +52,55 @@ PROMETHEUS_ADDRESS=0.0.0.0:9900
 VALIDATOR_KEYSTORE_FILE=/app/.exsat/${validator}_keystore.json
 VALIDATOR_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD
 EOF
-  echo "Created .env file at $target_dir"
+  echo "Overwrote .env file at $env_file"
+}
+
+# Find all keystore files in two possible locations:
+# 1. Directly in BASE_DIR (*_keystore.json)
+# 2. In subdirectories (subdir/*_keystore.json)
+
+# Process keystore files in base directory
+for file in "$BASE_DIR"/*_keystore.json; do
+  # Skip if no files match
+  [ -e "$file" ] || continue
+
+  # Extract validator name
+  filename=$(basename "$file")
+  validator="${filename%%_keystore.json}"
+
+  # Process this keystore
+  process_keystore "$file" "$validator"
+
+  # Add to validators array if not already present
+  if [[ ! " ${validators[@]} " =~ " ${validator} " ]]; then
+    validators+=("$validator")
+  fi
 done
 
-# 4. Create docker-compose.yml file in BASE_DIR
+# Process keystore files in subdirectories
+for dir in "$BASE_DIR"/*/; do
+  # Skip if no directories match
+  [ -d "$dir" ] || continue
+
+  for file in "$dir"*_keystore.json; do
+    # Skip if no files match
+    [ -e "$file" ] || continue
+
+    # Extract validator name from directory name
+    dirname=$(basename "$dir")
+    validator="${dirname}"
+
+    # Process this keystore
+    process_keystore "$file" "$validator"
+
+    # Add to validators array if not already present
+    if [[ ! " ${validators[@]} " =~ " ${validator} " ]]; then
+      validators+=("$validator")
+    fi
+  done
+done
+
+# 4. Create docker-compose.yml file in BASE_DIR (FORCE OVERWRITE)
 compose_file="$BASE_DIR/docker-compose.yml"
 cat > "$compose_file" <<EOF
 version: '3.8'
@@ -91,5 +127,5 @@ for validator in "${validators[@]}"; do
 EOF
 done
 
-echo "Generated docker-compose.yml at $BASE_DIR"
+echo "Generated docker-compose.yml at $compose_file"
 echo "Operation completed!"

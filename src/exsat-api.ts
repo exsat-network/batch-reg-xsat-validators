@@ -26,7 +26,7 @@ class ExsatApi {
       accountName: string;
       privateKey: string;
     },
-    nodes: string[]
+    nodes: string[],
   ) {
     this.nodes = nodes;
     this.currentNodeIndex = 0;
@@ -54,7 +54,7 @@ class ExsatApi {
       },
       {
         fetch,
-      }
+      },
     );
 
     logger.info('ExsatApi initialized successfully.');
@@ -110,7 +110,7 @@ class ExsatApi {
         },
         {
           fetch,
-        }
+        },
       );
       logger.info(`Switched to node: ${this.getCurrentNode()}`);
       return true;
@@ -183,7 +183,7 @@ class ExsatApi {
   public async executeAction(account: string, name: string, data: any, showLog = true) {
     const authorization = [
       {
-        actor: "res.xsat",
+        actor: 'res.xsat',
         permission: 'res',
       },
       {
@@ -205,7 +205,7 @@ class ExsatApi {
         },
         {
           expireSeconds: 30,
-        }
+        },
       );
       // logger.info(`Execute actions: ${this.executeActions++}`);
       return result.response;
@@ -256,7 +256,7 @@ class ExsatApi {
       fetch_all?: boolean;
     } = {
       fetch_all: false,
-    }
+    },
   ): Promise<T[]> {
     return await this.retryWithExponentialBackoff(async () => {
       let rows: T[] = [];
@@ -294,10 +294,9 @@ class ExsatApi {
    * regValidator
    */
   public async regxSatValidator(account: string, evmAddress: string) {
-
-     if (!evmAddress.match(/^(0x)?[0-9a-fA-F]{40}$/)) {
-       throw new Error('Invalid EVM address format');
-     }
+    if (!evmAddress.match(/^(0x)?[0-9a-fA-F]{40}$/)) {
+      throw new Error('Invalid EVM address format');
+    }
 
     try {
       const result = await this.executeAction('endrmng.xsat', 'newregvldtor', {
@@ -308,13 +307,14 @@ class ExsatApi {
         commission_rate: null,
       });
 
-      return result
+      return result;
     } catch (error) {
       console.error('错误:', (error as Error).message);
     }
   }
-}
 
+
+}
 
 
 export default ExsatApi;

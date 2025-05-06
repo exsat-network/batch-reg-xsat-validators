@@ -7,11 +7,11 @@ import {
   InvalidKdfError,
   InvalidPasswordError,
   InvalidPrivateKeyError,
-  IVLengthError,
+  IVLengthError, KeyDerivationError, KeyStoreVersionError,
   PBKDF2IterationsError,
   PrivateKeyLengthError,
 } from 'web3-errors';
-import { Bytes, CipherOptions, PBKDF2SHA256Params, ScryptParams } from 'web3-types';
+import { Bytes, CipherOptions, PBKDF2SHA256Params, ScryptParams, KeyStore } from 'web3-types';
 import {
   bytesToUint8Array,
   bytesToHex,
@@ -24,7 +24,10 @@ import {
   uuidV4,
 } from 'web3-utils';
 
-import { isHexStrict, isString } from 'web3-validator';
+import { isHexStrict, isString, validator } from 'web3-validator';
+import { decrypt as createDecipheriv } from 'ethereum-cryptography/aes';
+import path from 'node:path';
+import * as fs from 'fs';
 
 const keyStoreSchema = {
   type: 'object',
@@ -190,3 +193,76 @@ export const createKeystore = async (
     },
   };
 };
+
+export const decryptKeystore = async (
+  keystore: KeyStore | string,
+  password: string | Uint8Array,
+  nonStrict?: boolean,
+) => {
+  const json = typeof keystore === 'object' ? keystore : JSON.parse(nonStrict ? keystore.toLowerCase() : keystore);
+
+  validator.validateJSONSchema(keyStoreSchema, json);
+
+  if (json.version !== 3) throw new KeyStoreVersionError();
+
+  const uint8ArrayPassword = typeof password === 'string' ? hexToBytes(utf8ToHex(password)) : password;
+
+  validator.validate(['bytes'], [uint8ArrayPassword]);
+
+  let derivedKey;
+  if (json.crypto.kdf === 'scrypt') {
+    const kdfparams = json.crypto.kdfparams;
+    const uint8ArraySalt = typeof kdfparams.salt === 'string' ? hexToBytes(kdfparams.salt) : kdfparams.salt;
+    derivedKey = scryptSync(uint8ArrayPassword, uint8ArraySalt, kdfparams.n, kdfparams.p, kdfparams.r, kdfparams.dklen);
+  } else if (json.crypto.kdf === 'pbkdf2') {
+    const kdfparams = json.crypto.kdfparams;
+
+    const uint8ArraySalt = typeof kdfparams.salt === 'string' ? hexToBytes(kdfparams.salt) : kdfparams.salt;
+
+    derivedKey = pbkdf2Sync(uint8ArrayPassword, uint8ArraySalt, kdfparams.c, kdfparams.dklen, 'sha256');
+  } else {
+    throw new InvalidKdfError();
+  }
+
+  const ciphertext = hexToBytes(json.crypto.ciphertext);
+  const mac = sha3Raw(uint8ArrayConcat(derivedKey.slice(16, 32), ciphertext)).replace('0x', '');
+
+  if (mac !== json.crypto.mac) {
+    throw new KeyDerivationError();
+  }
+
+  const seed = await createDecipheriv(
+    hexToBytes(json.crypto.ciphertext),
+    derivedKey.slice(0, 16),
+    hexToBytes(json.crypto.cipherparams.iv),
+  );
+
+  const pvKeyFromWif = PrivateKey.from(WIF.encode(128, Buffer.from(seed), false).toString());
+  return pvKeyFromWif.toString();
+};
+
+export function getKeystore(account: string) {
+  const filePath1 = path.join(process.env.KEYSTORE_PATH, `${account}_keystore.json`);
+
+  const filePath2 = path.join(process.env.KEYSTORE_PATH, account, `${account}_keystore.json`);
+
+  try {
+    return fs.readFileSync(filePath1, 'utf-8');
+  } catch (err: any) {
+    if (err.code === 'ENOENT') {
+      try {
+        return fs.readFileSync(filePath2, 'utf-8');
+      } catch (err2: any) {
+        if (err2.code === 'ENOENT') {
+          throw new Error(`Keystore file not found in either location:
+                    1. ${filePath1}
+                    2. ${filePath2}`);
+        } else {
+          throw err2;
+        }
+      }
+    } else {
+      throw err;
+    }
+  }
+}
