@@ -9,29 +9,29 @@ import {
   EVM_RPC_URL,
   PRIVATE_KEY,
   EXSAT_RPC_URLS,
-  XSAT_STAKE_HELPER_CONTRACT,
+  // XSAT_STAKE_HELPER_CONTRACT,
   EVM_CHAIN_ID,
   STAKER_REWARD_ADDRESS,
 } from './constant';
-import { stakeHelperAbi } from './abi/StakeHelper';
-import { erc20Abi } from './abi/erc20';
-import { convertAddress } from './utils';
+// import { stakeHelperAbi } from './abi/StakeHelper';
+// import { erc20Abi } from './abi/erc20';
+// import { convertAddress } from './utils';
 import ExsatApi from './exsat-api';
 import * as fs from 'node:fs';
 import { decryptKeystore, getKeystore } from './keystore';
 
 
-const tokens = {
-  tokenList: {
-    XSAT: {
-      symbol: 'XSAT',
-      address: '0x8266f2fbc720012e5Ac038aD3dbb29d2d613c459',
-      stake_address: XSAT_STAKE_HELPER_CONTRACT,
-      precision: 18,
-      native_precision: 8,
-    },
-  },
-};
+// const tokens = {
+//   tokenList: {
+//     XSAT: {
+//       symbol: 'XSAT',
+//       address: '0x8266f2fbc720012e5Ac038aD3dbb29d2d613c459',
+//       stake_address: XSAT_STAKE_HELPER_CONTRACT,
+//       precision: 18,
+//       native_precision: 8,
+//     },
+//   },
+// };
 // const testnet2 = {
 //   tokenList: {
 //     XSAT: {
@@ -151,95 +151,95 @@ async function evmSignup(accountName, publicKey) {
 }
 
 
-async function rechargeGas(account) {
-  try {
-    account = account.endsWith('.sat') ? account : `${account}.sat`;
-    const txData = {
-      from: signer.address,
-      to: '0xbBbBbBbBbbbbBbbbbBbBbbBBbaB0894D80EE0D90', //rescmng.xsat
-      value: '10000000000000000',
-      data: web3.utils.utf8ToHex(account),
-      chainId: Number(EVM_CHAIN_ID),
-      gas: 200000,
-      gasPrice: await web3.eth.getGasPrice(),
-    };
-    const signedTx = await web3.eth.accounts.signTransaction(txData, PRIVATE_KEY);
-    return await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-  } catch (error) {
-    console.error(account + ' recharge error: ' + error);
-    process.exit(1);
-  }
+// async function rechargeGas(account) {
+//   try {
+//     account = account.endsWith('.sat') ? account : `${account}.sat`;
+//     const txData = {
+//       from: signer.address,
+//       to: '0xbBbBbBbBbbbbBbbbbBbBbbBBbaB0894D80EE0D90', //rescmng.xsat
+//       value: '10000000000000000',
+//       data: web3.utils.utf8ToHex(account),
+//       chainId: Number(EVM_CHAIN_ID),
+//       gas: 200000,
+//       gasPrice: await web3.eth.getGasPrice(),
+//     };
+//     const signedTx = await web3.eth.accounts.signTransaction(txData, PRIVATE_KEY);
+//     return await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+//   } catch (error) {
+//     console.error(account + ' recharge error: ' + error);
+//     process.exit(1);
+//   }
 
-}
-
-
-async function xsatStake(account, amount) {
-  account = account.endsWith('.sat') ? account : `${account}.sat`;
-  const tokenContract = new web3.eth.Contract(erc20Abi, tokens.tokenList.XSAT.address);
-  const allowance = await tokenContract.methods.allowance(signer.address, tokens.tokenList.XSAT.stake_address).call();
-  // @ts-ignore
-  if (BigInt(allowance) < BigInt(amount)) {
-    // @ts-ignore
-    const receipt = await approve(tokens.tokenList.XSAT.stake_address, amount);
-    console.log('Approval successful:', receipt);
-  }
-  const receipt = await xsatDeposit(account, amount);
-  console.log('Staking successful:', receipt);
-}
+// }
 
 
-async function approve(spenderAddress, amount) {
-  try {
-    const tokenContract = new web3.eth.Contract(erc20Abi, tokens.tokenList.XSAT.address);
-    const data = tokenContract.methods.approve(spenderAddress, amount).encodeABI();
+// async function xsatStake(account, amount) {
+//   account = account.endsWith('.sat') ? account : `${account}.sat`;
+//   const tokenContract = new web3.eth.Contract(erc20Abi, tokens.tokenList.XSAT.address);
+//   const allowance = await tokenContract.methods.allowance(signer.address, tokens.tokenList.XSAT.stake_address).call();
+//   // @ts-ignore
+//   if (BigInt(allowance) < BigInt(amount)) {
+//     // @ts-ignore
+//     const receipt = await approve(tokens.tokenList.XSAT.stake_address, amount);
+//     console.log('Approval successful:', receipt);
+//   }
+//   const receipt = await xsatDeposit(account, amount);
+//   console.log('Staking successful:', receipt);
+// }
 
-    const txData = {
-      from: signer.address,
-      to: tokens.tokenList.XSAT.address,
-      data,
-      gas: 200000, // Set gas
-      gasPrice: await web3.eth.getGasPrice(), // Get current gas price
-    };
 
-    // Sign transaction with private key
-    const signedTx = await web3.eth.accounts.signTransaction(txData, PRIVATE_KEY);
+// async function approve(spenderAddress, amount) {
+//   try {
+//     const tokenContract = new web3.eth.Contract(erc20Abi, tokens.tokenList.XSAT.address);
+//     const data = tokenContract.methods.approve(spenderAddress, amount).encodeABI();
 
-    // Send signed transaction
-    const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-    return receipt.transactionHash;
-    // console.log('Transaction hash:', receipt.transactionHash);
-  } catch (error) {
-    console.error('Approve error: ' + error);
-    process.exit(1);
-  }
+//     const txData = {
+//       from: signer.address,
+//       to: tokens.tokenList.XSAT.address,
+//       data,
+//       gas: 200000, // Set gas
+//       gasPrice: await web3.eth.getGasPrice(), // Get current gas price
+//     };
 
-}
+//     // Sign transaction with private key
+//     const signedTx = await web3.eth.accounts.signTransaction(txData, PRIVATE_KEY);
 
-async function xsatDeposit(targetAddress, depositAmount) {
-  try {
-    const stakeHelperContract = new web3.eth.Contract(stakeHelperAbi, tokens.tokenList.XSAT.stake_address);
-    const data = stakeHelperContract.methods.deposit(convertAddress(targetAddress), depositAmount).encodeABI();
-    const txData = {
-      from: signer.address,
-      to: tokens.tokenList.XSAT.stake_address,
-      data,
-      gas: 200000, // Set gas
-      gasPrice: await web3.eth.getGasPrice(), // Get current gas price
-    };
+//     // Send signed transaction
+//     const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+//     return receipt.transactionHash;
+//     // console.log('Transaction hash:', receipt.transactionHash);
+//   } catch (error) {
+//     console.error('Approve error: ' + error);
+//     process.exit(1);
+//   }
 
-    // Sign transaction with private key
-    const signedTx = await web3.eth.accounts.signTransaction(txData, PRIVATE_KEY);
+// }
 
-    // Send signed transaction
-    const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-    return receipt.transactionHash;
-    // console.log('Transaction hash:', receipt.transactionHash);
-  } catch (error) {
-    console.error('XSAT staking error: ' + error);
-    process.exit(1);
-  }
+// async function xsatDeposit(targetAddress, depositAmount) {
+//   try {
+//     const stakeHelperContract = new web3.eth.Contract(stakeHelperAbi, tokens.tokenList.XSAT.stake_address);
+//     const data = stakeHelperContract.methods.deposit(convertAddress(targetAddress), depositAmount).encodeABI();
+//     const txData = {
+//       from: signer.address,
+//       to: tokens.tokenList.XSAT.stake_address,
+//       data,
+//       gas: 200000, // Set gas
+//       gasPrice: await web3.eth.getGasPrice(), // Get current gas price
+//     };
 
-}
+//     // Sign transaction with private key
+//     const signedTx = await web3.eth.accounts.signTransaction(txData, PRIVATE_KEY);
+
+//     // Send signed transaction
+//     const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+//     return receipt.transactionHash;
+//     // console.log('Transaction hash:', receipt.transactionHash);
+//   } catch (error) {
+//     console.error('XSAT staking error: ' + error);
+//     process.exit(1);
+//   }
+
+// }
 
 
 main().then(() => process.exit(0));
