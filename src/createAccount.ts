@@ -133,7 +133,7 @@ async function evmSignup(accountName, publicKey) {
     const txData = {
       from: signer.address,
       to: '0xbbbbbbbbbbbbbbbbbbbbbbbbc3993d541dc1b200',
-      value: '10000000000000',
+      value: '100000000000000',
       data: web3.utils.utf8ToHex(`${accountName}-${publicKey}`),
       chainId: Number(EVM_CHAIN_ID),
       gas: 200000,
