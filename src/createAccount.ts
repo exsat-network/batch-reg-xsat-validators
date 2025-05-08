@@ -11,7 +11,7 @@ import {
   EXSAT_RPC_URLS,
   // XSAT_STAKE_HELPER_CONTRACT,
   EVM_CHAIN_ID,
-  STAKER_REWARD_ADDRESS,
+  STAKER_REWARD_ADDRESS, SIGNUP_VALUE,
 } from './constant';
 // import { stakeHelperAbi } from './abi/StakeHelper';
 // import { erc20Abi } from './abi/erc20';
@@ -139,7 +139,7 @@ async function evmSignup(accountName, publicKey) {
 
     // Calculate total cost
     const gasLimit = 200000;
-    const txValue = BigInt(process.env.SIGNUP_VALUE);
+    const txValue = BigInt(SIGNUP_VALUE);
     const gasCost = BigInt(gasPrice) * BigInt(gasLimit);
     const totalCost = txValue + gasCost;
 

@@ -12,6 +12,8 @@ export const EVM_CHAIN_ID = process.env.EVM_CHAIN_ID || 1;
 export const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 export const STAKER_REWARD_ADDRESS = process.env.STAKER_REWARD_ADDRESS || '';
 
+export const SIGNUP_VALUE = process.env.SIGNUP_VALUE || '100000000000000';
+
 export const ACCOUNT_PREFIX = process.env.ACCOUNT_PREFIX || 'valid';
 export const ACCOUNT_SUFFIX = process.env.ACCOUNT_SUFFIX || '.sat';
 export const TOTAL: number = Number(process.env.TOTAL) || 10;
