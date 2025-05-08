@@ -130,24 +130,51 @@ async function creatAccount() {
 
 async function evmSignup(accountName, publicKey) {
   try {
+    // Check balance first
+    const balance = await web3.eth.getBalance(signer.address);
+    console.log(`Current balance: ${web3.utils.fromWei(balance, 'ether')}`);
+
+    // Use fixed gas values matching the successful transaction
+    const gasPrice = '50000000';
+
+    // Calculate total cost
+    const gasLimit = 200000;
+    const txValue = BigInt(process.env.SIGNUP_VALUE);
+    const gasCost = BigInt(gasPrice) * BigInt(gasLimit);
+    const totalCost = txValue + gasCost;
+
+    console.log(`Transaction value: ${web3.utils.fromWei(txValue.toString(), 'ether')}`);
+    console.log(`Gas cost: ${web3.utils.fromWei(gasCost.toString(), 'ether')}`);
+    console.log(`Total cost: ${web3.utils.fromWei(totalCost.toString(), 'ether')}`);
+
+    if (BigInt(balance) < totalCost) {
+      throw new Error(`Insufficient balance. Need ${web3.utils.fromWei(totalCost.toString(), 'ether')} but only have ${web3.utils.fromWei(balance, 'ether')}`);
+    }
+
     const txData = {
       from: signer.address,
       to: '0xbbbbbbbbbbbbbbbbbbbbbbbbc3993d541dc1b200',
-      value: '10000000000000',
+      value: txValue,
       data: web3.utils.utf8ToHex(`${accountName}-${publicKey}`),
       chainId: Number(EVM_CHAIN_ID),
-      gas: 200000,
-      gasPrice: await web3.eth.getGasPrice(),
+      gas: gasLimit,
+      gasPrice: gasPrice,
     };
     console.log(`${accountName}-${publicKey}`);
     console.log(txData);
     const signedTx = await web3.eth.accounts.signTransaction(txData, PRIVATE_KEY);
     return await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-  } catch (error) {
-    console.error(accountName + ' registration error: ' + error);
-    process.exit(1);
+  } catch (error: any) {
+    // More detailed error logging
+    if (error.message && error.message.includes('insufficient funds')) {
+      console.error(`${accountName} registration error: Insufficient funds for transaction. Please ensure your account has enough balance.`);
+    } else {
+      console.error(`${accountName} registration error: ${error.message || error}`);
+      console.error('Error details:', error);
+    }
+    // Throw to allow the retry mechanism to handle it
+    throw error;
   }
-
 }
 
 
